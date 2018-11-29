@@ -1,18 +1,7 @@
 let express = require('express')
 let bp = require('body-parser')
 let server = express()
-let cors = require('cors')
 let port = 3000
-
-let whitelist = ['http://localhost:8080'];
-let corsOptions = {
-  origin: function (origin, callback) {
-    let originIsWhitelisted = whitelist.indexOf(origin) !== -1;
-    callback(null, originIsWhitelisted);
-  },
-  credentials: true
-};
-server.use(cors(corsOptions))
 
 require('./server-assets/db/mlab-config')
 
@@ -20,16 +9,22 @@ server.use(bp.json())
 server.use(bp.urlencoded({
   extended: true
 }))
+//serves the front end of the app
+server.use(express.static(__dirname + '/public'))
 
 let auth = require('./server-assets/auth/routes')
 
 server.use(auth.session)
-server.use(auth.router)
-server.use((req, res, next) => {
+server.use('/account', auth.router)
+server.use('*', (req, res, next) => {
+  if (req.method == 'get') {
+    return next()
+  }
   if (!req.session.uid) {
-    return res.status(401).send({
-      error: "Please Login to Continue"
-    })
+    return next(new Error('Please Login to Continue'))
+  }
+  if (req.method == "post") {
+    req.body.creatorId = req.session.uid
   }
   next()
 })

@@ -7,7 +7,7 @@ const SALT = 10
 
 
 let schema = new Schema({
-  name: { type: String, required: true },
+  name: { type: String },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   created: { type: Number, required: true, default: Date.now() },
